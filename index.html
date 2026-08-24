@@ -1,315 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لعبة المحكمة السرية</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Cairo', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>المحكمة السرية</title>
+<style>
+:root{--bg:#080b14;--panel:#121a2a;--line:#26334d;--red:#f43f5e;--gold:#fbbf24;--purple:#a855f7;--blue:#38bdf8}*{box-sizing:border-box}body{margin:0;padding:14px;background:radial-gradient(circle at top,#17213a,#080b14 65%);color:#f8fafc;font-family:system-ui,sans-serif}.app{max-width:760px;margin:auto}.panel{background:#121a2aee;border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 10px 30px #0005}button{width:100%;padding:11px;margin-top:8px;border:0;border-radius:9px;background:var(--red);color:#fff;font-weight:700;cursor:pointer}button.alt{background:#334155}button.gold{background:#d97706;color:#fff}button.purple{background:#7e22ce;color:#fff}input,select,textarea{width:100%;padding:11px;margin:5px 0 10px;border:1px solid var(--line);border-radius:9px;background:#070b14;color:#fff}textarea{min-height:80px}.grid,.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.player,.card,.box{padding:11px;border-radius:10px}.player{background:#080b14;border:1px solid var(--line);text-align:center}.card{border:2px solid #334155;background:#1a2437;cursor:pointer}.card.exceptional{border-color:var(--gold);background:#2d2109}.card.sel{border-color:var(--red);background:#36202c}.box{margin:9px 0;white-space:pre-line}.inbox{border-right:4px solid var(--blue);background:#10263b}.ally{border-right:4px solid var(--purple);background:#28173b}.clue{border-right:4px solid var(--purple);background:#21152f}.event{border-right:4px solid var(--gold);background:#2d230a}.muted{color:#a9b4c7;font-size:.86em}.small{font-size:.78em;color:#cbd5e1}.danger{color:#fb7185}.hidden{display:none!important}.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+</style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start p-4">
-
-  <div id="app" class="w-full max-w-4xl mx-auto space-y-6">
-    <!-- شاشة البداية وإدخال اللاعبين -->
-    <div id="setup-screen" class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-2xl space-y-4">
-      <h1 class="text-3xl font-black text-amber-500 text-center">المحكمة السرية</h1>
-      <p class="text-gray-400 text-center text-sm">أدخل أسماء اللاعبين المشاركين في هذه الجلسة الاستخباراتية (3 إلى 8 لاعبين)</p>
-      
-      <div id="players-input-list" class="space-y-3">
-        <div class="flex gap-2">
-          <input type="text" class="player-name-input flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-amber-500" value="اللاعب 1" placeholder="اسم اللاعب">
-        </div>
-        <div class="flex gap-2">
-          <input type="text" class="player-name-input flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-amber-500" value="اللاعب 2" placeholder="اسم اللاعب">
-        </div>
-        <div class="flex gap-2">
-          <input type="text" class="player-name-input flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-amber-500" value="اللاعب 3" placeholder="اسم اللاعب">
-        </div>
-      </div>
-
-      <div class="flex gap-3 pt-2">
-        <button onclick="addPlayerInput()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-amber-400 font-bold py-3 rounded-xl transition border border-gray-700">+ إضافة لاعب</button>
-        <button onclick="startGame()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-gray-950 font-black py-3 rounded-xl transition shadow-lg">بدء المحاكمة</button>
-      </div>
-    </div>
-
-    <!-- لوحة اللعب الرئيسية -->
-    <div id="game-board" class="hidden space-y-6">
-      <div class="flex justify-between items-center bg-gray-900 border border-gray-800 p-4 rounded-2xl shadow">
-        <div>
-          <h2 id="round-indicator" class="text-xl font-bold text-amber-400">الجولة رقم: 1</h2>
-          <p id="current-player-turn" class="text-sm text-gray-400">دور اللاعب: --</p>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="openBuyCardModal()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-bold shadow transition">شراء بطاقة (4 نقاط)</button>
-          <button onclick="nextPhase()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-bold shadow transition">إنهاء الدور والتصويت</button>
-        </div>
-      </div>
-
-      <!-- شبكة اللاعبين وحالتهم -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="players-grid"></div>
-
-      <!-- لوحة التحكم بالبطاقات والإجراءات -->
-      <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4">
-        <h3 class="text-lg font-bold text-amber-400">إجراءات اللاعب الحالي</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">اختر البطاقة من يدك:</label>
-            <select id="action-card-select" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none"></select>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">اللاعب المستهدف (إن وجد):</label>
-            <select id="action-target-select" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none"></select>
-          </div>
-          <div class="flex items-end">
-            <button onclick="executeAction()" class="w-full bg-amber-600 hover:bg-amber-500 text-gray-950 font-bold py-2 rounded-xl text-sm transition shadow">تنفيذ الإجراء</button>
-          </div>
-        </div>
-        <div id="card-desc-box" class="text-xs text-gray-400 bg-gray-950 p-3 rounded-xl border border-gray-800">وصف البطاقة المختارة يظهر هنا...</div>
-      </div>
-    </div>
-
-    <!-- شاشة التقرير والتصويت الجماعي -->
-    <div id="voting-screen" class="hidden bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-2xl space-y-6">
-      <div class="border-b border-gray-800 pb-4">
-        <h2 class="text-2xl font-black text-amber-400">تقرير المحكمة الاستخباري</h2>
-        <div id="ai-court-clue" class="mt-3 bg-gray-950 p-4 rounded-xl border border-gray-800 text-gray-200 text-sm leading-relaxed"></div>
-        <div id="global-event-box" class="mt-3 hidden bg-amber-950/40 border border-amber-800/60 p-3 rounded-xl text-amber-300 text-xs"></div>
-      </div>
-
-      <div class="space-y-4">
-        <h3 class="text-lg font-bold text-white">التصويت الجماعي العلني (من هو الجاني؟)</h3>
-        <div id="group-voting-list" class="space-y-3"></div>
-      </div>
-
-      <button onclick="submitGroupVotes()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg">حسم التصويت وإعلان الحكم</button>
-    </div>
-  </div>
-
-  <!-- مودال كشف البطاقات الفوري -->
-  <div id="reveal-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-    <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl max-w-md w-full space-y-4">
-      <h3 class="text-lg font-bold text-amber-400">محتويات حقيبة الخصم (كشف فوري)</h3>
-      <div id="reveal-content-list" class="space-y-2"></div>
-      <button onclick="closeRevealModal()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-xl text-sm">إغلاق</button>
-    </div>
-  </div>
-
-  <script>
-    let gameState = {
-      players: [],
-      currentTurnIndex: 0,
-      roundNumber: 1,
-      pendingActions: [],
-      pendingMessages: {},
-      courtCase: null
-    };
-
-    function addPlayerInput() {
-      const list = document.getElementById('players-input-list');
-      const count = list.children.length + 1;
-      const div = document.createElement('div');
-      div.className = 'flex gap-2';
-      div.innerHTML = `<input type="text" class="player-name-input flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-amber-500" value="اللاعب ${count}" placeholder="اسم اللاعب">`;
-      list.appendChild(div);
-    }
-
-    async function startGame() {
-      const inputs = document.querySelectorAll('.player-name-input');
-      const names = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
-      if (names.length < 3) {
-        alert('يجب أن يكون هناك 3 لاعبين على الأقل.');
-        return;
-      }
-
-      const rawPlayers = names.map((name, i) => ({ id: `p-${i+1}`, name, reputation: 10, cards: [] }));
-      
-      const res = await fetch('/api/index', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'init_game', players: rawPlayers })
-      });
-      const data = await res.json();
-      if (data.players) {
-        gameState.players = data.players;
-        document.getElementById('setup-screen').classList.add('hidden');
-        document.getElementById('game-board').classList.remove('hidden');
-        updateBoard();
-      }
-    }
-
-    function updateBoard() {
-      const p = gameState.players[gameState.currentTurnIndex];
-      document.getElementById('round-indicator').innerText = `الجولة رقم: ${gameState.roundNumber}`;
-      document.getElementById('current-player-turn').innerText = `دور اللاعب الحالي: ${p.name} (السمعة: ${p.reputation})`;
-
-      // رسم شبكة اللاعبين
-      const grid = document.getElementById('players-grid');
-      grid.innerHTML = gameState.players.map(pl => `
-        <div class="bg-gray-900 border ${pl.id === p.id ? 'border-amber-500 shadow-amber-500/10' : 'border-gray-800'} p-4 rounded-2xl shadow space-y-2">
-          <div class="flex justify-between items-center">
-            <h4 class="font-bold text-white">${pl.name}</h4>
-            <span class="bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold border border-amber-500/20">${pl.reputation} نقاط سمعة</span>
-          </div>
-          <div class="text-xs text-gray-400">عدد البطاقات في اليد: ${pl.cards.length} / 3</div>
-        </div>
-      `).join('');
-
-      // تعبئة قائمة بطاقات اللاعب الحالي
-      const cardSelect = document.getElementById('action-card-select');
-      cardSelect.innerHTML = p.cards.length ? p.cards.map(c => `<option value="${c.instanceId}">${c.name} (${c.description})</option>`).join('') : '<option value="">لا توجد بطاقات في يدك</option>';
-
-      // تعبئة قائمة الأهداف
-      const targetSelect = document.getElementById('action-target-select');
-      targetSelect.innerHTML = gameState.players.filter(pl => pl.id !== p.id).map(pl => `<option value="${pl.id}">${pl.name}</option>`).join('');
-    }
-
-    async function executeAction() {
-      const p = gameState.players[gameState.currentTurnIndex];
-      const cardId = document.getElementById('action-card-select').value;
-      const targetId = document.getElementById('action-target-select').value;
-      if (!cardId) {
-        alert('اختر بطاقة لتنفيذها.');
-        return;
-      }
-
-      const card = p.cards.find(c => c.instanceId === cardId);
-
-      // ميزة كشف البطاقات الفورية
-      if (card && card.effectType === 'REVEAL') {
-        const targetPlayer = gameState.players.find(pl => pl.id === targetId);
-        if (targetPlayer) {
-          const contentList = document.getElementById('reveal-content-list');
-          contentList.innerHTML = targetPlayer.cards.length ? targetPlayer.cards.map(c => `<div class="bg-gray-800 p-2 rounded-lg text-sm text-amber-300"><b>${c.name}</b>: ${c.description}</div>`).join('') : '<div class="text-gray-400 text-sm">حقيبة هذا اللاعب فارغة تماماً.</div>';
-          document.getElementById('reveal-modal').classList.remove('hidden');
-        }
-      }
-
-      gameState.pendingActions.push({
-        playerId: p.id,
-        usedCardInstanceId: cardId,
-        card,
-        targetId
-      });
-
-      // الانتقال للاعب التالي أو فتح التصويت الجماعي
-      gameState.currentTurnIndex++;
-      if (gameState.currentTurnIndex >= gameState.players.length) {
-        await resolveRoundBackend();
-      } else {
-        updateBoard();
-      }
-    }
-
-    function closeRevealModal() {
-      document.getElementById('reveal-modal').classList.add('hidden');
-    }
-
-    async function openBuyCardModal() {
-      const p = gameState.players[gameState.currentTurnIndex];
-      const res = await fetch('/api/index', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'buy_card', players: gameState.players, playerId: p.id })
-      });
-      const data = await res.json();
-      if (data.error) {
-        alert(data.message || 'تعذر شراء البطاقة.');
-        return;
-      }
-      gameState.players = data.players;
-      alert(`تم شراء بطاقة جديدة بنجاح! (${data.boughtCard.name})`);
-      updateBoard();
-    }
-
-    async function resolveRoundBackend() {
-      const res = await fetch('/api/index', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'resolve_round',
-          players: gameState.players,
-          actions: gameState.pendingActions,
-          pendingMessages: gameState.pendingMessages
-        })
-      });
-      const data = await res.json();
-      gameState.players = data.players;
-      gameState.pendingMessages = data.pendingMessages;
-      gameState.courtCase = data.courtCase;
-
-      // الانتقال لشاشة التصويت الجماعي
-      document.getElementById('game-board').classList.add('hidden');
-      document.getElementById('voting-screen').classList.remove('hidden');
-
-      document.getElementById('ai-court-clue').innerText = data.courtCase.clue;
-      const evBox = document.getElementById('global-event-box');
-      if (data.courtCase.globalEvent) {
-        evBox.classList.remove('hidden');
-        evBox.innerHTML = `<b>حدث عام في القصر:</b> ${data.courtCase.globalEvent.title} - ${data.courtCase.globalEvent.description}`;
-      } else {
-        evBox.classList.add('hidden');
-      }
-
-      // إعداد قائمة التصويت الجماعي
-      const votingList = document.getElementById('group-voting-list');
-      votingList.innerHTML = gameState.players.map(voter => `
-        <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center">
-          <span class="font-bold text-white">${voter.name} يصوت ضد:</span>
-          <select data-voter="${voter.id} class="vote-select bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none">
-            <option value="NONE">لا توجد اتهامات</option>
-            ${gameState.players.map(pl => `<option value="${pl.id}">${pl.name}</option>`).join('')}
-          </select>
-        </div>
-      `).join('');
-    }
-
-    async function submitGroupVotes() {
-      const selects = document.querySelectorAll('.vote-select, select[data-voter]');
-      // بدلاً من الاستعلام المعقد، نجمع الأصوات مباشرة من العناصر داخل قائمة التصويت
-      const container = document.getElementById('group-voting-list');
-      const rows = container.querySelectorAll('div');
-      const votes = [];
-
-      rows.forEach(row => {
-        const select = row.querySelector('select');
-        // استخراج معرف المصوت من مكان ما أو نربطه بالترتيب
-      });
-
-      // طريقة أسهل وأضمن لتجميع أصوات اللاعبين
-      const voteSelects = document.querySelectorAll('#group-voting-list select');
-      const formattedVotes = gameState.players.map((voter, idx) => ({
-        voterId: voter.id,
-        accusedId: voteSelects[idx]?.value || 'NONE'
-      }));
-
-      const res = await fetch('/api/index', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'resolve_vote',
-          players: gameState.players,
-          trueCulpritId: gameState.courtCase.trueCulpritId,
-          votes: formattedVotes
-        })
-      });
-      const data = await res.json();
-      gameState.players = data.players;
-
-      alert(data.verdictMsg);
-
-      // بدء جولة جديدة وتصفية الأكشنات
-      gameState.roundNumber++;
-      gameState.currentTurnIndex = 0;
-      gameState.pendingActions = [];
-
-      document.getElementById('voting-screen').classList.add('hidden');
-      document.getElementById('game-board').classList.remove('hidden');
-      updateBoard();
-    }
-  </script>
-</body>
-</html>
+<body><main class="app"><div class="top"><h1>المحكمة السرية</h1><button class="alt" style="width:auto" onclick="newGame()">جلسة جديدة</button></div>
+<section id="setup" class="panel"><h2>إعداد الجلسة</h2><p class="muted">أدخل أسماء اللاعبين مفصولة بفواصل. اللعبة تعتمد على تمرير الهاتف والتحالفات سرية بالكامل.</p><input id="names" value="أحمد, سارة, خالد"><button onclick="startGame()">بدء اللعبة</button></section>
+<section id="game" class="hidden"><div id="status" class="grid"></div><section id="action" class="panel"><div id="curtain"><h2 id="turnTitle"></h2><button id="curtainButton" onclick="openTurn()">فتح الدور السري</button></div><div id="turn" class="hidden"><h2 id="playerName"></h2><div id="inbox" class="box inbox hidden"></div><div id="allyStatus" class="box ally hidden"></div><h3>بطاقاتك المتاحة (2 عشوائية)</h3><div id="cards" class="cards"></div><div style="display:flex;gap:8px"><button class="gold" onclick="buyRandomCard()">🎲 شراء بطاقة عشوائية (1 نقطة)</button><button class="purple" onclick="buyRareCard()">★ متجر البطاقات النادرة (4 نقاط)</button></div><div id="targetArea" class="hidden"><label>الهدف</label><select id="target"></select></div><div id="textArea" class="hidden"><label>نص الرسالة</label><textarea id="messageText" maxlength="300"></textarea></div><button onclick="submitAction()">تأكيد الحركة وتسليم الهاتف</button></div></section>
+<section id="recap" class="panel hidden"><h2>تقرير نهاية الجولة</h2><div id="eventBox" class="box event hidden"></div><div id="clue" class="box clue"></div><button onclick="startVote()">الانتقال إلى التصويت السري</button></section>
+<section id="vote" class="panel hidden"><div id="voteCurtain"><h2 id="voteTitle"></h2><button onclick="openVote()">فتح التصويت</button></div><div id="voteForm" class="hidden"><div id="voteCase" class="box">من تعتقد أنه المسبب للأحداث خلف الكواليس؟</div><select id="voteTarget"></select><button onclick="submitVote()">تأكيد التصويت وتسليم الهاتف</button></div></section>
+</section></main>
+<script>
+let state=null,selected=null;
+const $=id=>document.getElementById(id);
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function save(){localStorage.setItem('secret-court-v2',JSON.stringify(state))}
+function load(){try{return JSON.parse(localStorage.getItem('secret-court-v2'))}catch{return null}}
+function newGame(){localStorage.removeItem('secret-court-v2');location.reload()}
+function startGame(){const names=$('names').value.split(',').map(x=>x.trim()).filter(Boolean);if(names.length<2)return alert('أدخل اسمين على الأقل');const stamp=Date.now();state={players:names.map((name,i)=>({id:`player-${stamp}-${i}`,name,reputation:10,allyId:null,allyRoundsLeft:0})),pendingMessages:{},hands:{},round:0,currentTurn:0,actions:[],votes:[],voteTurn:0,currentCase:null};save();showGame();startRound()}
+function showGame(){$('setup').classList.add('hidden');$('game').classList.remove('hidden');renderStatus()}
+function renderStatus(){$('status').innerHTML=state.players.map(p=>`<div class="player"><b>${escapeHtml(p.name)}</b><br>${p.reputation>0?'⭐ '+p.reputation:'<span class="danger">مقصى</span>'}</div>`).join('')}
+function resetPrivateUI(){selected=null;$('messageText').value='';$('target').innerHTML='';$('targetArea').classList.add('hidden');$('textArea').classList.add('hidden');$('inbox').innerHTML='';$('inbox').classList.add('hidden');$('allyStatus').innerHTML='';$('allyStatus').classList.add('hidden');$('cards').innerHTML=''}
+function startRound(){state.round++;state.currentTurn=0;state.actions=[];state.votes=[];state.voteTurn=0;state.hands={};state.currentCase=null;save();$('recap').classList.add('hidden');$('vote').classList.add('hidden');$('action').classList.remove('hidden');showCurtain()}
+function showCurtain(){resetPrivateUI();while(state.currentTurn<state.players.length&&!state.players[state.currentTurn].reputation)state.currentTurn++;if(state.currentTurn>=state.players.length)return resolveRound();$('turn').classList.add('hidden');$('curtain').classList.remove('hidden');$('turnTitle').textContent=`سلّم الهاتف إلى: ${state.players[state.currentTurn].name}`;$('curtainButton').textContent='فتح الدور السري';$('curtainButton').onclick=openTurn}
+function renderPrivateInbox(p){const list=state.pendingMessages[p.id]||[];if(list.length){let html='';list.forEach((m,idx)=>{if(m.kind==='alliance_offer'){html+=`🤝 <b>${escapeHtml(m.text)}</b><br><button onclick="acceptAlliance('${m.fromId}', ${idx})">قبول التحالف السري</button><hr>`;}else{html+=`📩 <b>${escapeHtml(m.fromName)}:</b> ${escapeHtml(m.text)}<hr>`;}});$('inbox').innerHTML=html;$('inbox').classList.remove('hidden');}}
+function acceptAlliance(fromId, msgIdx){const p=state.players[state.currentTurn];const from=state.players.find(x=>x.id===fromId);if(from&&!p.allyId&&!from.allyId){p.allyId=from.id;p.allyRoundsLeft=3;from.allyId=p.id;from.allyRoundsLeft=3;alert(`تم عقد التحالف السري مع ${from.name} لمدة 3 جولات!`);state.pendingMessages[p.id].splice(msgIdx,1);save();renderStatus();renderAlliance(p);renderPrivateInbox(p);}}
+function renderAlliance(p){if(p.allyId){const a=state.players.find(x=>x.id===p.allyId);$('allyStatus').textContent=`🤝 حليفك السري: ${a?.name||'غير معروف'} (متبقي ${p.allyRoundsLeft} جولات)`;$('allyStatus').classList.remove('hidden');}}
+function openTurn(){const p=state.players[state.currentTurn];resetPrivateUI();$('curtain').classList.add('hidden');$('turn').classList.remove('hidden');$('playerName').textContent=`الدور السري: ${p.name} (السمعة: ${p.reputation})`;renderPrivateInbox(p);renderAlliance(p);loadHand(p)}
+async function buyRandomCard(){const p=state.players[state.currentTurn];if(p.reputation<=1)return alert('سمعتك يجب أن تكون أكثر من 1 لشراء بطاقة!');try{const d=await post({action:'buy_card',playerId:p.id,players:state.players});state.players=d.players;if(!state.hands[p.id])state.hands[p.id]=[];state.hands[p.id].push(d.boughtCard);save();renderStatus();renderHand(p,state.hands[p.id]);alert(`حصلت على: ${d.boughtCard.name}`)}catch(e){alert(e.message)}}
+async function buyRareCard(){const p=state.players[state.currentTurn];if(p.reputation<=4)return alert('شراء البطاقات النادرة يتطلب 4 نقاط سمعة كاملة!');try{const d=await post({action:'buy_rare_card',playerId:p.id,players:state.players});state.players=d.players;if(!state.hands[p.id])state.hands[p.id]=[];state.hands[p.id].push(d.boughtCard);save();renderStatus();renderHand(p,state.hands[p.id]);alert(`حصلت على بطاقة استثنائية: ${d.boughtCard.name}`)}catch(e){alert(e.message)}}
+async function loadHand(p){if(state.hands[p.id])return renderHand(p,state.hands[p.id]);try{const d=await post({action:'generate_cards'});state.hands[p.id]=d.cards;save();renderHand(p,d.cards)}catch(e){alert('تعذر جلب البطاقات العشوائية');}}
+function renderHand(p,hand){$('cards').innerHTML=hand.map(c=>`<div class="card ${c.rarity==='استثنائية'?'exceptional':''}" data-card="${escapeHtml(c.id)}" onclick="selectCard('${escapeHtml(c.id)}',this)"><b>${escapeHtml(c.name)}</b><br><span class="small">${escapeHtml(c.description)}</span></div>`).join('')}
+function selectCard(id,el){const p=state.players[state.currentTurn];selected=(state.hands[p.id]||[]).find(c=>c.id===id);if(!selected)return;document.querySelectorAll('#cards .card').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');const needs=Boolean(selected.targetRequired);$('targetArea').classList.toggle('hidden',!needs);$('textArea').classList.toggle('hidden',selected.effectType!=='MESSAGE');if(needs)$('target').innerHTML=state.players.filter(x=>x.id!==p.id&&x.reputation>0).map(x=>`<option value="${x.id}">${escapeHtml(x.name)}</option>`).join('')}
+function submitAction(){if(!selected)return alert('اختر بطاقة أولاً');const p=state.players[state.currentTurn];const targetId=selected.targetRequired?$('target').value:null;if(selected.targetRequired&&!targetId)return alert('اختر هدفاً للبطاقة');if(selected.effectType==='MESSAGE'&&!$('messageText').value.trim())return alert('اكتب نص الرسالة');state.actions.push({playerId:p.id,targetId,cardId:selected.id,generatedCard:selected,text:$('messageText').value.trim()});delete state.pendingMessages[p.id];save();state.currentTurn++;showCurtain()}
+async function resolveRound(){resetPrivateUI();$('action').classList.add('hidden');try{const d=await post({action:'resolve_round',players:state.players,actions:state.actions,pendingMessages:state.pendingMessages});state.players=d.players;state.pendingMessages=d.pendingMessages||{};state.currentCase=d.courtCase;save();renderStatus();showRecap()}catch(e){$('action').classList.remove('hidden');showCurtain();alert(e.message)}}
+function showRecap(){$('recap').classList.remove('hidden');if(state.currentCase.globalEvent){$('eventBox').innerHTML=`📢 <b>حدث هام طارئ: ${escapeHtml(state.currentCase.globalEvent.title)}</b><br>${escapeHtml(state.currentCase.globalEvent.description)}`;$('eventBox').classList.remove('hidden');}else{$('eventBox').classList.add('hidden');}$('clue').textContent='🔒 الدليل الشبهي الظني (قد يكون مضللاً):\n'+state.currentCase.clue+`\n(نسبة التقدير الظني: ${state.currentCase.confidence}%)`}
+function startVote(){state.voteTurn=0;state.votes=[];$('recap').classList.add('hidden');$('vote').classList.remove('hidden');showVoteCurtain()}
+function showVoteCurtain(){while(state.voteTurn<state.players.length&&!state.players[state.voteTurn].reputation)state.voteTurn++;if(state.voteTurn>=state.players.length)return finalizeVote();$('voteForm').classList.add('hidden');$('voteCurtain').classList.remove('hidden');$('voteTitle').textContent=`سلّم الهاتف للتصويت: ${state.players[state.voteTurn].name}`}
+function openVote(){$('voteCurtain').classList.add('hidden');$('voteForm').classList.remove('hidden');$('voteTarget').innerHTML='<option value="NONE">امتناع / لا أحد</option>'+state.players.filter((p,i)=>p.reputation>0&&i!==state.voteTurn).map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('')}
+function submitVote(){const p=state.players[state.voteTurn];const v=$('voteTarget').value;state.votes.push({voterId:p.id,accusedId:v==='NONE'?null:v});state.voteTurn++;save();showVoteCurtain()}
+async function finalizeVote(){try{const d=await post({action:'resolve_vote',players:state.players,votes:state.votes,trueCulpritId:state.currentCase.trueCulpritId});state.players=d.players;save();alert(d.verdictMsg);if(state.players.filter(p=>p.reputation>0).length<=1)return newGame();startRound()}catch(e){alert('تعذر حسم التصويت: '+e.message);$('vote').classList.remove('hidden')}}
+async function post(body){let response=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});let data=await response.json();if(!response.ok)throw Error(data.message||data.error||'خطأ API');return data}
+state=load();if(state&&state.players?.length){showGame();if(state.currentCase)showRecap();else{$('action').classList.remove('hidden');showCurtain()}}
+</script></body></html>
