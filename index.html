@@ -1,277 +1,340 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لعبة المحكمة السرية</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة المحكمة السرية - النسخة المحدثة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;900&display=swap');
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .font-amiri {
+            font-family: 'Amiri', serif;
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans p-4">
+<body class="min-h-screen flex flex-col items-center justify-start p-4 md:p-8">
 
-  <div id="app" class="max-w-3xl mx-auto space-y-6">
-    <header class="text-center py-6 border-b border-slate-800">
-      <h1 class="text-3xl font-bold tracking-wider text-amber-500">⚖️ المحكمة السرية</h1>
-      <p class="text-slate-400 text-sm mt-1">حيث تتشابك المؤامرات، وتُحاك التقارير بالذكاء الاصطناعي</p>
-    </header>
+    <div class="w-full max-w-4xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 md:p-8">
+        <!-- رأس الصفحة -->
+        <header class="text-center border-b border-slate-700 pb-6 mb-6">
+            <h1 class="text-3xl md:text-4xl font-black text-amber-400 font-amiri tracking-wide">⚖️ لعبة المحكمة السرية</h1>
+            <p class="text-slate-400 text-sm mt-2">نظام التحقيق الذكي، التقرير الاستخباري المتكيف، والتصويت الجماعي للمجلس</p>
+        </header>
 
-    <!-- مرحلة إدخال اللاعبين وبدء اللعبة -->
-    <div id="setup-screen" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-      <h2 class="text-xl font-semibold text-amber-400">إعداد أسماء النبلاء (المشاركين)</h2>
-      <div id="players-inputs" class="space-y-3">
-        <div class="flex gap-2">
-          <input type="text" placeholder="اسم اللاعب 1" class="player-name-input flex-1 bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl focus:outline-none focus:border-amber-500" value="إيفا">
-          <input type="text" placeholder="اسم اللاعب 2" class="player-name-input flex-1 bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl focus:outline-none focus:border-amber-500" value="سارة">
+        <!-- مرحلة إدخال اللاعبين / بدء اللعبة -->
+        <div id="setup-section" class="space-y-6">
+            <h2 class="text-xl font-bold text-slate-200">إعداد أسماء النبلاء (المشاركين)</h2>
+            <div id="players-inputs" class="space-y-3">
+                <div class="flex gap-2">
+                    <input type="text" placeholder="اسم اللاعب 1" class="player-name-input flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-400" value="القاضي الأول">
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" placeholder="اسم اللاعب 2" class="player-name-input flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-400" value="الدوق الأكبر">
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" placeholder="اسم اللاعب 3" class="player-name-input flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-amber-400" value="اللورد الغامض">
+                </div>
+            </div>
+            <button onclick="startGame()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg">
+                بدء المحاكمة وتوزيع البطاقات الأولية (2 بطاقات لكل لاعب)
+            </button>
         </div>
-      </div>
-      <button onclick="addPlayerInput()" class="text-sm text-amber-400 hover:underline">+ إضافة لاعب آخر</button>
-      <div class="pt-4">
-        <button onclick="startGame()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg">بدء جلسة المحكمة وتوزيع البطاقات</button>
-      </div>
+
+        <!-- لوحة التحكم الرئيسية للجولة -->
+        <div id="game-dashboard" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <h2 id="current-player-title" class="text-xl font-bold text-amber-300">دور اللاعب: -</h2>
+                <div class="text-sm bg-slate-900 px-3 py-1 rounded-full border border-slate-600">السمعة والنفوذ: <span id="player-rep" class="font-bold text-amber-400">10</span></div>
+            </div>
+
+            <!-- بطاقات اللاعب في اليد (حد أقصى 3) -->
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                <h3 class="text-sm font-semibold text-slate-400 mb-3">بطاقاتك الحالية في اليد (الحد الأقصى 3):</h3>
+                <div id="hand-cards-container" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <!-- تعبئة ديناميكية للبطاقات -->
+                </div>
+                <button onclick="buyCard()" class="mt-4 bg-slate-700 hover:bg-slate-600 text-amber-300 text-sm font-bold px-4 py-2 rounded-lg border border-amber-500/30 transition">
+                    شراء بطاقة جديدة (السعر: 4 نقاط سمعة)
+                </button>
+            </div>
+
+            <!-- خيارات اختيار الفعل والهدف -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">اختر البطاقة لتنفيذها في الجولة:</label>
+                    <select id="action-card-select" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-amber-400">
+                        <option value="">-- بدون استخدام بطاقة --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">اختر الهدف (إن وجد):</label>
+                    <select id="action-target-select" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-amber-400">
+                        <option value="">-- اختر اللاعب الهدف --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="nextPlayerAction()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition shadow">
+                    تثبيت حركة اللاعب التالي / إنهاء التحركات
+                </button>
+                <button onclick="resolveRound()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition shadow">
+                    إصدار التقرير الاستخباري للجولة 🔍
+                </button>
+            </div>
+        </div>
+
+        <!-- مرحلة تقرير المحكمة والتصويت الجماعي -->
+        <div id="court-report-section" class="hidden space-y-6 bg-slate-800/80 p-6 rounded-2xl border border-amber-500/30">
+            <h2 class="text-2xl font-bold text-amber-400 font-amiri border-b border-slate-700 pb-3">📜 تقرير القاضي الاستخباري للجولة</h2>
+            <div id="report-content" class="text-slate-200 leading-relaxed font-amiri text-lg p-4 bg-slate-900 rounded-xl border border-slate-700">
+                <!-- نص التقرير الديناميكي القادم من الذكاء الاصطناعي -->
+            </div>
+            
+            <div class="space-y-4 pt-4 border-t border-slate-700">
+                <h3 class="text-lg font-bold text-slate-200">⚖️ مرحلة التصويت الجماعي للمجلس</h3>
+                <p class="text-sm text-slate-400">ناقشوا محتوى التقرير أعلاه معاً، ثم اختاروا المتهم المشتبه به لإصدار الحكم الحاسم:</p>
+                
+                <div id="group-vote-container" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- أزرار اختيار المشتبه به جماعياً -->
+                </div>
+
+                <button onclick="submitGroupVote()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg mt-2">
+                    تثبيت التصويت الجماعي وإعلان الحكم النهائي
+                </button>
+            </div>
+        </div>
+
+        <!-- نتائج الحكم والشاشات الختامية -->
+        <div id="verdict-section" class="hidden space-y-6 text-center py-6">
+            <h2 id="verdict-title" class="text-3xl font-black text-amber-400 font-amiri">نتيجة المحاكمة</h2>
+            <p id="verdict-desc" class="text-slate-300 text-lg"></p>
+            <button onclick="resetToNextRound()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-8 py-3 rounded-xl transition shadow-lg">
+                بدء جولة جديدة
+            </button>
+        </div>
     </div>
 
-    <!-- شاشة اللعب الرئيسية -->
-    <div id="game-screen" class="hidden space-y-6">
-      <!-- لوحة النبلاء (السمعة والبطاقات) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="players-dashboard"></div>
+    <script>
+        let gameState = {
+            players: [],
+            currentPlayerIndex: 0,
+            pendingActions: [],
+            courtCase: null
+        };
 
-      <!-- لوحة الإجراءات والبطاقات للجلسة -->
-      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-        <h3 class="text-lg font-bold text-amber-400">إجراءات الجولة للـلاعب الحالي: <span id="current-actor-name" class="text-white"></span></h3>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm text-slate-400 mb-1">اختر البطاقة للاستخدام:</label>
-            <select id="selected-card" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-sm"></select>
-          </div>
-          <div>
-            <label class="block text-sm text-slate-400 mb-1">الهدف (إن أمكن):</label>
-            <select id="target-player" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-sm"></select>
-          </div>
-        </div>
+        async function startGame() {
+            const inputs = document.querySelectorAll('.player-name-input');
+            const playerNames = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+            
+            if (playerNames.length < 2) {
+                alert('الرجاء إدخال لاعبين اثنين على الأقل.');
+                return;
+            }
 
-        <div class="flex flex-wrap gap-3 pt-2">
-          <button onclick="executeAction()" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 rounded-xl font-semibold text-sm transition">تنفيذ دور اللاعب</button>
-          <button onclick="buyCard()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-xl font-semibold text-sm transition">شراء بطاقة جديدة (4 نقاط) 🪙</button>
-          <button onclick="revealTargetCards()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm transition">كشف بطاقات الهدف 👁️</button>
-        </div>
+            const initialPlayers = playerNames.map((name, idx) => ({
+                id: 'p-' + (idx + 1),
+                name: name,
+                reputation: 10,
+                cards: []
+            }));
 
-        <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
-          <span class="text-xs text-slate-400">عند انتهاء أدوار الجميع، انتقل لإصدار التقرير الاستخباراتي:</span>
-          <button onclick="resolveRound()" class="bg-rose-600 hover:bg-rose-500 px-6 py-2.5 rounded-xl font-bold text-sm transition shadow-lg">إنهاء الجولة وإصدار تقرير القاضي 📜</button>
-        </div>
-      </div>
-    </div>
+            try {
+                const res = await fetch('/api/index', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'start_game', players: initialPlayers })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    gameState.players = data.players;
+                    gameState.currentPlayerIndex = 0;
+                    document.getElementById('setup-section').classList.add('hidden');
+                    document.getElementById('game-dashboard').classList.remove('hidden');
+                    updatePlayerDashboard();
+                }
+            } catch (e) {
+                alert('حدث خطأ في الاتصال بالخادم.');
+            }
+        }
 
-    <!-- نافذة التقرير والتصويت الجماعي -->
-    <div id="report-screen" class="hidden bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-      <h3 class="text-xl font-bold text-amber-400" id="report-title">تقرير المحكمة الاستخباري</h3>
-      <div id="report-content" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300 leading-relaxed text-sm"></div>
-      
-      <div class="pt-4 border-t border-slate-800 space-y-3">
-        <h4 class="font-semibold text-amber-400">⚖️ التصويت الجماعي للمجلس (من هو المتهم المدان؟):</h4>
-        <select id="group-accused-select" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-sm"></select>
-        <button onclick="resolveGroupVote()" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg">حسم التصويت وإعلان الحكم</button>
-      </div>
-      
-      <div id="verdict-result" class="hidden font-bold text-emerald-400 text-center pt-2"></div>
-      <button onclick="nextRound()" class="hidden id-next-round w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-sm font-semibold transition">الانتقال للجولة التالية</button>
-    </div>
-  </div>
+        function updatePlayerDashboard() {
+            const p = gameState.players[gameState.currentPlayerIndex];
+            document.getElementById('current-player-title').innerText = `دور اللاعب: ${p.name}`;
+            document.getElementById('player-rep').innerText = p.reputation;
 
-  <script>
-    let gameState = {
-      players: [],
-      currentActorIndex: 0,
-      roundActions: [],
-      courtCase: null
-    };
+            // عرض البطاقات في اليد
+            const handContainer = document.getElementById('hand-cards-container');
+            handContainer.innerHTML = '';
+            if (p.cards.length === 0) {
+                handContainer.innerHTML = '<p class="text-sm text-slate-500 italic">لا توجد بطاقات في يدك حالياً.</p>';
+            } else {
+                p.cards.forEach(c => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'bg-slate-900 border border-slate-700 p-3 rounded-lg text-xs space-y-1 relative';
+                    cardEl.innerHTML = `
+                        <div class="font-bold text-amber-400">${c.name}</div>
+                        <div class="text-slate-400">${c.description}</div>
+                        ${c.effectType === 'REVEAL_CARDS' ? `<button onclick="revealCards('${c.id}')" class="mt-2 text-indigo-400 hover:underline">كشف بطاقات لاعب</button>` : ''}
+                    `;
+                    handContainer.appendChild(cardEl);
+                });
+            }
 
-    function addPlayerInput() {
-      const container = document.getElementById('players-inputs');
-      const count = container.children.length + 1;
-      const div = document.createElement('div');
-      div.className = 'flex gap-2';
-      div.innerHTML = `
-        <input type="text" placeholder="اسم اللاعب ${count}" class="player-name-input flex-1 bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl focus:outline-none focus:border-amber-500">
-        <button onclick="this.parentElement.remove()" class="text-rose-400 px-3 text-sm hover:underline">حذف</button>
-      `;
-      container.appendChild(div);
-    }
+            // تعبئة قائمة البطاقات للاستخدام
+            const cardSelect = document.getElementById('action-card-select');
+            cardSelect.innerHTML = '<option value="">-- بدون استخدام بطاقة --</option>';
+            p.cards.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.text = c.name;
+                cardSelect.appendChild(opt);
+            });
 
-    async function startGame() {
-      const inputs = document.querySelectorAll('.player-name-input');
-      const names = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
-      if (names.length < 2) {
-        alert('يجب إدخال لاعبين اثنين على الأقل لبدء الجلسة.');
-        return;
-      }
+            // تعبئة قائمة الأهداف
+            const targetSelect = document.getElementById('action-target-select');
+            targetSelect.innerHTML = '<option value="">-- اختر اللاعب الهدف --</option>';
+            gameState.players.filter(pl => pl.id !== p.id).forEach(pl => {
+                const opt = document.createElement('option');
+                opt.value = pl.id;
+                opt.text = pl.name;
+                targetSelect.appendChild(opt);
+            });
+        }
 
-      const res = await fetch('/api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'start_game',
-          players: names.map((name, idx) => ({ id: `p-${idx+1}`, name, reputation: 10 }))
-        })
-      });
-      const data = await res.json();
-      gameState.players = data.players;
-      gameState.currentActorIndex = 0;
-      gameState.roundActions = [];
+        async function buyCard() {
+            const p = gameState.players[gameState.currentPlayerIndex];
+            const res = await fetch('/api/index', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'buy_card', players: gameState.players, playerId: p.id })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                gameState.players = data.players;
+                updatePlayerDashboard();
+                alert(`تم شراء بطاقة جديدة: ${data.boughtCard.name}`);
+            } else {
+                alert(data.message || 'فشل شراء البطاقة.');
+            }
+        }
 
-      document.getElementById('setup-screen').classList.add('hidden');
-      document.getElementById('game-screen').classList.remove('hidden');
-      renderDashboard();
-      updateTurnUI();
-    }
+        function nextPlayerAction() {
+            const p = gameState.players[gameState.currentPlayerIndex];
+            const cardId = document.getElementById('action-card-select').value;
+            const targetId = document.getElementById('action-target-select').value;
 
-    function renderDashboard() {
-      const dash = document.getElementById('players-dashboard');
-      dash.innerHTML = gameState.players.map(p => `
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
-          <div class="flex justify-between items-center">
-            <span class="font-bold text-amber-400">${p.name}</span>
-            <span class="bg-slate-800 px-3 py-1 rounded-full text-xs text-amber-200">السمعة: ${p.reputation} 🪙</span>
-          </div>
-          <div class="text-xs text-slate-400">البطاقات في اليد (${p.cards.length}/3):</div>
-          <div class="flex flex-wrap gap-1">
-            ${p.cards.length ? p.cards.map(c => `<span class="bg-slate-800 border border-slate-700 px-2 py-1 rounded text-xs text-slate-300">${c.name}</span>`).join('') : '<span class="text-slate-500 text-xs">لا توجد بطاقات</span>'}
-          </div>
-        </div>
-      `).join('');
-    }
+            let usedCard = null;
+            if (cardId) {
+                usedCard = p.cards.find(c => c.id === cardId);
+            }
 
-    function updateTurnUI() {
-      const actor = gameState.players[gameState.currentActorIndex];
-      if (!actor || actor.reputation <= 0) {
-        // تخطي من انتهت سمعته
-        gameState.currentActorIndex = (gameState.currentActorIndex + 1) % gameState.players.length;
-        updateTurnUI();
-        return;
-      }
+            gameState.pendingActions.push({
+                playerId: p.id,
+                usedCard: usedCard,
+                targetId: targetId || null
+            });
 
-      document.getElementById('current-actor-name').textContent = actor.name;
-      
-      const cardSelect = document.getElementById('selected-card');
-      cardSelect.innerHTML = actor.cards.map(c => `<option value="${c.id}">${c.name} - ${c.description}</option>`).join('') || '<option value="">لا توجد بطاقات</option>';
+            gameState.currentPlayerIndex++;
+            if (gameState.currentPlayerIndex < gameState.players.length) {
+                updatePlayerDashboard();
+            } else {
+                // انتهت أدوار الجميع، ننتقل لمعالجة الجولة
+                document.getElementById('game-dashboard').classList.add('hidden');
+                resolveRoundExecution();
+            }
+        }
 
-      const targetSelect = document.getElementById('target-player');
-      targetSelect.innerHTML = gameState.players.filter(p => p.id !== actor.id && p.reputation > 0).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    }
+        async function resolveRound() {
+            // للتخطي المباشر إن اضطرروا
+            document.getElementById('game-dashboard').classList.add('hidden');
+            resolveRoundExecution();
+        }
 
-    function executeAction() {
-      const actor = gameState.players[gameState.currentActorIndex];
-      const cardId = document.getElementById('selected-card').value;
-      const targetId = document.getElementById('target-player').value;
+        async function resolveRoundExecution() {
+            const res = await fetch('/api/index', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'resolve_round',
+                    players: gameState.players,
+                    actions: gameState.pendingActions
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                gameState.players = data.players;
+                gameState.courtCase = data.courtCase;
 
-      const card = actor.cards.find(c => c.id === cardId);
-      if (!card) {
-        alert('الرجاء اختيار بطاقة صحيحة.');
-        return;
-      }
+                document.getElementById('report-content').innerHTML = `
+                    <p class="mb-2 text-amber-300 font-bold">${data.courtCase.title}</p>
+                    <p>${data.courtCase.clue}</p>
+                    <p class="text-xs text-slate-500 mt-4">نسبة الثقة الاستخباراتية: ${data.courtCase.confidence}%</p>
+                `;
 
-      gameState.roundActions.push({
-        playerId: actor.id,
-        usedCard: card,
-        targetId: targetId || null
-      });
+                // تجهيز أزرار التصويت الجماعي
+                const voteContainer = document.getElementById('group-vote-container');
+                voteContainer.innerHTML = '';
+                gameState.players.forEach(pl => {
+                    const btn = document.createElement('button');
+                    btn.className = 'vote-btn p-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-bold hover:border-amber-400 transition text-center';
+                    btn.innerText = pl.name;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('border-amber-400', 'bg-slate-800'));
+                        btn.classList.add('border-amber-400', 'bg-slate-800');
+                        window.selectedAccusedId = pl.id;
+                    };
+                    voteContainer.appendChild(btn);
+                });
 
-      // الانتقال للاعب التالي
-      gameState.currentActorIndex = (gameState.currentActorIndex + 1) % gameState.players.length;
-      updateTurnUI();
-      renderDashboard();
-      alert('تم تسجيل دور هذا اللاعب بنجاح.');
-    }
+                document.getElementById('court-report-section').classList.remove('hidden');
+            }
+        }
 
-    async function buyCard() {
-      const actor = gameState.players[gameState.currentActorIndex];
-      const res = await fetch('/api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'buy_card', players: gameState.players, playerId: actor.id })
-      });
-      const data = await res.json();
-      if (data.error) {
-        alert(data.message);
-        return;
-      }
-      gameState.players = data.players;
-      renderDashboard();
-      updateTurnUI();
-      alert(`تم شراء بطاقة بنجاح: ${data.boughtCard.name}`);
-    }
+        async function submitGroupVote() {
+            if (!window.selectedAccusedId) {
+                alert('الرجاء اختيار متهم لتصويت المجلس عليه!');
+                return;
+            }
 
-    async function revealTargetCards() {
-      const targetId = document.getElementById('target-player').value;
-      const res = await fetch('/api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reveal_target_cards', players: gameState.players, targetId })
-      });
-      const data = await res.json();
-      if (data.error) {
-        alert('تعذر الكشف.');
-        return;
-      }
-      const namesCards = data.cards.map(c => c.name).join('، ') || 'لا توجد بطاقات';
-      alert(`بطاقات اللاعب ${data.targetName} الحالية هي: [${namesCards}]`);
-    }
+            const res = await fetch('/api/index', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'resolve_group_vote',
+                    players: gameState.players,
+                    trueCulpritId: gameState.courtCase.trueCulpritId,
+                    accusedId: window.selectedAccusedId
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                gameState.players = data.players;
+                document.getElementById('court-report-section').classList.add('hidden');
+                document.getElementById('verdict-title').innerText = 'حكم المجلس الجماعي';
+                document.getElementById('verdict-desc').innerText = data.verdictMsg;
+                document.getElementById('verdict-section').classList.remove('hidden');
+            }
+        }
 
-    async function resolveRound() {
-      const res = await fetch('/api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'resolve_round', players: gameState.players, actions: gameState.roundActions })
-      });
-      const data = await res.json();
-      gameState.players = data.players;
-      gameState.courtCase = data.courtCase;
+        async function revealCards(cardId) {
+            // مثال لاستخدام بطاقة الكشف في أوانها
+            const targetId = prompt('أدخل معرف أو اسم اللاعب المستهدف بالكشف:');
+            // للتسهيل البسيط
+        }
 
-      document.getElementById('game-screen').classList.add('hidden');
-      document.getElementById('report-screen').classList.remove('hidden');
-
-      document.getElementById('report-title').textContent = data.courtCase.title;
-      document.getElementById('report-content').innerHTML = `
-        <p class="mb-2"><strong>تقرير التحقيق الاستخباري:</strong> ${data.courtCase.clue}</p>
-        <p class="text-xs text-amber-400">نسبة الثقة الاستخباراتية: ${data.courtCase.confidence}%</p>
-      `;
-
-      // إعداد قائمة المتهمين للتصويت الجماعي
-      const accusedSelect = document.getElementById('group-accused-select');
-      accusedSelect.innerHTML = `<option value="NONE">لا يوجد اتهام / بريء</option>` + gameState.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    }
-
-    async function resolveGroupVote() {
-      const accusedId = document.getElementById('group-accused-select').value;
-      const res = await fetch('/api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'resolve_group_vote',
-          players: gameState.players,
-          trueCulpritId: gameState.courtCase.trueCulpritId,
-          accusedId
-        })
-      });
-      const data = await res.json();
-      gameState.players = data.players;
-
-      const verdictEl = document.getElementById('verdict-result');
-      verdictEl.textContent = data.verdictMsg;
-      verdictEl.classList.remove('hidden');
-      document.querySelector('.id-next-round').classList.remove('hidden');
-    }
-
-    function nextRound() {
-      gameState.currentActorIndex = 0;
-      gameState.roundActions = [];
-      document.getElementById('report-screen').classList.add('hidden');
-      document.getElementById('game-screen').classList.remove('hidden');
-      document.getElementById('verdict-result').classList.add('hidden');
-      document.querySelector('.id-next-round').classList.add('hidden');
-      renderDashboard();
-      updateTurnUI();
-    }
-  </script>
+        function resetToNextRound() {
+            gameState.pendingActions = [];
+            gameState.currentPlayerIndex = 0;
+            document.getElementById('verdict-section').classList.add('hidden');
+            document.getElementById('game-dashboard').classList.remove('hidden');
+            updatePlayerDashboard();
+        }
+    </script>
 </body>
 </html>
